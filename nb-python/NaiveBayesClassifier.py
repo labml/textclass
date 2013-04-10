@@ -25,6 +25,9 @@ class NaiveBayesClassifier(object):
         self.learneddic = {} # {"palavra": {"pos": valor, "neg": valor}}
         # Armazena as probabilidades para cada palavra em: positiva ou negativa
         self.probdic = {}    # {"palavra": {"pos": valor, "neg": valor}} 
+        
+        #variavel para coleta de informacoes estatisticas
+        self.info = ""
 
     """ Funcoes para treino
         Basicamente, calculam a frequencia das palavras nos arquivos do corpus
@@ -49,7 +52,8 @@ class NaiveBayesClassifier(object):
             self.learneddic[word].setdefault(cat,0)
             self.learneddic[word][cat]+=freq
     
-    """ Atualiza o dicionario definido em __init__ de acordo com a probabilidade da palavra e sua categoria
+    """ Atualiza o dicionario definido em __init__ de acordo com a probabilidade da palavra e sua 
+    categoria
     """
     def updateProbDic(self,words,cat):
         for word,freq in wordsfreq.iteritems():
@@ -71,20 +75,10 @@ class NaiveBayesClassifier(object):
             words = re.findall('\w+', open(filename).read().lower())
             # atualiza a frequencia de palavras no arquivo com a variavel freq
             freq.update(collections.Counter(words))
-        return freq
-    
-    def train2(self, directory, category):
-        #objeto de frequencia inicial (vazio)
-        freq = collections.Counter()
-
-        for filename in os.listdir(dirc):
-            # leia cada palavra do arquivo
-            words = re.findall('\w+', open(filename).read().lower())
-            # atualiza a frequencia de palavras no arquivo com a variavel freq
-            freq.update(collections.Counter(words))
-        return freq
         
-    
+        print "Diretorio: ", dirc, " / Arquivos: ", len(os.listdir(dirc)), " / Palavras únicas: ", len(freq)
+        return freq
+
     """ Operacoes com Naive Bayes
     """
     def calculate_probabilities(self):
@@ -120,19 +114,36 @@ class NaiveBayesClassifier(object):
             denominator = ((float(negative_count)/total_negative) + (float(positive_count)/total_positive))
             self.probdic[word]["neg"] = numerator/denominator            
    
-   ''' Implementar        
-    def sum_positive(self):
-        """p(S) = (p1 * p2 ... pn) / 
-        ( (p1 * p2 ... * pn) + ( (1 - p1) * (1 - p2) ... * (1 - pn) ) )"""
-        numerator = sum([token.positive_value for token in self.tokens])
-        denominator = numerator + sum([1-token.positive_value for token in self.tokens])
+            
+    """ Operacoes de classificacao
+    """
+    def classifier(self, dir_positivo, dir_negativo):
+        #Para cada diretorio, percorrer os arquivos de texto e contar a frequencia geral das palavras
+        freq_geral = self.getFrequency(dir_positivo)
+        freq_geral.update(self.getFrequency(dir_negativo))
+        
+        prob_geral = {}
+        #Para cada palavra a ser classificada, procurar no dicionario de probabilidades treinado
+        for word,prob in self.probdic.iteritems():
+            if freq_geral.has_key(word):
+                prob_geral.setdefault(word,prob)
+        return prob_geral
+    
+    def sum_positive(self,probdic_teste):
+        """p(S) = (p1 * p2 ... pn) 
+                    / 
+                  ( (p1 * p2 ... * pn) + ( (1 - p1) * (1 - p2) ... * (1 - pn) ) )
+        """
+        # nao muito eficiente, refazer depois de testar
+        numerator = sum([prob["pos"] for word,prob in probdic_teste.iteritems()])
+        denominator = numerator + sum([1-prob["pos"] for word,prob in probdic_teste.iteritems()])
         return float(numerator)/denominator
             
-    def sum_negative(self):
-        """p(S) = (p1 * p2 ... pn) / 
-        ( (p1 * p2 ... * pn) + ( (1 - p1) * (1 - p2) ... * (1 - pn) ) )"""
-        numerator = sum([token.negative_value for token in self.tokens])
-        denominator = numerator + sum([1-token.negative_value for token in self.tokens])
+    def sum_negative(self,probdic_teste):
+        """p(S) = (p1 * p2 ... pn) 
+                    / 
+                  ( (p1 * p2 ... * pn) + ( (1 - p1) * (1 - p2) ... * (1 - pn) ) )"""
+        
+        numerator = sum([prob["neg"] for word,prob in probdic_teste.iteritems()])
+        denominator = numerator + sum([1-prob["neg"] for word,prob in probdic_teste.iteritems()])
         return float(numerator)/denominator
-    '''
-     
