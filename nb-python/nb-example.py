@@ -39,18 +39,34 @@ def test_classifier(nb):
 
     # classificador = nb.classifier(dir_pos_teste, dir_neg_teste)
 
-    print "Testando positivos:"
+    tp, fp, tn, fn = 0, 0, 0, 0
+
+    print "Testando positivos..."
     for filename in os.listdir(dir_pos_teste):
         item_contents = read_test_item(os.path.join(dir_pos_teste, filename))
         item_class = nb.classify_item(item_contents)
-        print 'Classe: ', item_class
+        if item_class == 'pos':
+            tp += 1
+        else:
+            fn += 1
 
-    print "Testando negativos:"
+    print "Testando negativos..."
     for filename in os.listdir(dir_neg_teste):
         item_contents = read_test_item(os.path.join(dir_neg_teste, filename))
         item_class = nb.classify_item(item_contents)
-        print 'Classe: ', item_class
+        if item_class == 'neg':
+            tn += 1
+        else:
+            fp += 1
 
+    print 'Acertos: ', (tp + tn), ' / 600'
+    print 'Accuracy: ', float(tp + tn) / 600.0
+    print 'TP: ', tp, ' - FP: ', fp, ' - TN: ', tn, ' - FN: ', fn
+    precision = float(tp) / float(tp + fp)
+    print 'Precision: ', precision
+    recall = float(tp) / float(tp + fn)
+    print 'Recall: ', recall
+    print 'F1 score: ', 2 * (precision * recall) / (precision + recall)
 
 if __name__ == '__main__':
     nb = create_classifier()
