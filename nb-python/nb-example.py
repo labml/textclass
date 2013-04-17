@@ -19,8 +19,8 @@ nb = NaiveBayesClassifier(positive_corpus=dir_pos, negative_corpus=dir_neg)
 nb.train_positive()
 nb.train_negative()
 
-#cria um dicionario com as probabilidades positivas e negativas de cada palavra
-#e será utilizado para os cálculos futuros
+# cria um dicionario com as probabilidades positivas e negativas de cada palavra
+# e será utilizado para os cálculos futuros
 nb.calculate_probabilities()
 
 

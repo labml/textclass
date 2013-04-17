@@ -81,10 +81,11 @@ class NaiveBayesClassifier(object):
         freq = collections.Counter()
 
         for filename in os.listdir(dirc):
-            # leia cada palavra do arquivo
-            words = tokenize(open(filename).read().lower())   # FIX: arquivos ficam abertos?
-            # atualiza a frequencia de palavras no arquivo com a variavel freq
-            freq.update(words)
+            # le conteudo do arquivo e atualiza
+            # frequencia de ocorrencia de cada palavra
+            with open(filename) as f:
+                words = tokenize(f.read().lower())
+                freq.update(words)
 
         print "Diretorio: ", dirc, " / Arquivos: ", len(os.listdir(dirc)), " / Palavras únicas: ", len(freq)
         return freq
@@ -170,7 +171,7 @@ class NaiveBayesClassifier(object):
     def sum_negative(self, probdic_teste):
         """p(S) = (p1 * p2 ... pn)
                     /
-                  ( (p1 * p2 ... * pn) + ( (1 - p1) * (1 - p2) ... * (1 - pn) ) )"""
+             ( (p1 * p2 ... * pn) + ( (1 - p1) * (1 - p2) ... * (1 - pn) ) )"""
 
         numerator = sum([prob["neg"] for word, prob in probdic_teste.iteritems()])
         denominator = numerator + sum([1 - prob["neg"] for word, prob in probdic_teste.iteritems()])
