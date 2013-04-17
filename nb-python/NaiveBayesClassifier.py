@@ -32,9 +32,17 @@ class NaiveBayesClassifier(object):
         self.positive_corpus = positive_corpus
         self.negative_corpus = negative_corpus
 
-        self.learneddic = {} # {"palavra": {"pos": n_ocorrencias, "neg": n_ocorrencias}}
-        # Armazena as probabilidades para cada palavra em: positiva ou negativa
-        self.probdic = {}    # {"palavra": {"pos": probabilidade, "neg": probabilidade}}
+        # {"palavra": {"pos": n_ocorrencias, "neg": n_ocorrencias}}
+        self.learneddic = {}
+
+        # {"palavra": {"pos": probabilidade, "neg": probabilidade}}
+        self.probdic = {}
+
+        self.pos_freq = {}
+        self.neg_freq = {}
+
+        # TODO: definir conjunto de classes como um campo do objeto,
+        # p/ generalizar classificacao
 
         # variavel para coleta de informacoes estatisticas
         self.info = ""
@@ -62,29 +70,19 @@ class NaiveBayesClassifier(object):
             self.learneddic[word].setdefault(cat, 0)
             self.learneddic[word][cat] += freq
 
-    """ Atualiza o dicionario definido em __init__ de acordo com a probabilidade da palavra e sua
-    categoria
-    """
-    def updateProbDic(self, words, cat):
-        for word, freq in wordsfreq.iteritems():
-            self.learneddic.setdefault(word, {})
-            self.learneddic[word].setdefault(cat, 0)
-            self.learneddic[word][cat] += freq
-
-
     """ Calcula a frequencia de palavras para um diretorio de arquivos
     """
     def getFrequency(self, dirc):
         os.chdir(dirc)
 
-        #objeto de frequencia inicial (vazio)
+        # objeto de frequencia inicial (vazio)
         freq = collections.Counter()
 
         for filename in os.listdir(dirc):
             # leia cada palavra do arquivo
-            words = tokenize(open(filename).read().lower())
+            words = tokenize(open(filename).read().lower())   # FIX: arquivos ficam abertos?
             # atualiza a frequencia de palavras no arquivo com a variavel freq
-            freq.update(collections.Counter(words))
+            freq.update(words)
 
         print "Diretorio: ", dirc, " / Arquivos: ", len(os.listdir(dirc)), " / Palavras únicas: ", len(freq)
         return freq
@@ -114,8 +112,8 @@ class NaiveBayesClassifier(object):
             self.probdic[word].setdefault("neg", 0)
 
             # total de registros positivos e negativos
-            positive_count = freq["pos"] if freq.has_key("pos") else 0 #if estranho
-            negative_count = freq["neg"] if freq.has_key("neg") else 0
+            positive_count = freq.get("pos", 0)
+            negative_count = freq.get("neg", 0)
 
             numerator = (float(positive_count)/total_positive)
             denominator = ((float(positive_count)/total_positive) + (float(negative_count)/total_negative))
