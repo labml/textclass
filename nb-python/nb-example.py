@@ -7,28 +7,51 @@ Arquivo com duas pastas com reviews positivos e negativos.
 Funciona com a mesma ideia de um classificador de spam.
 """
 
-import NaiveBayesClassifier
-
-# Para treinar ... (exemplo usado com 700 arquivos de texto em cada pasta)
-
-dir_pos = "diretorio/pos/"
-dir_neg = "diretorio/neg/"
-
-nb = NaiveBayesClassifier(positive_corpus=dir_pos, negative_corpus=dir_neg)
-
-nb.train_positive()
-nb.train_negative()
-
-# cria um dicionario com as probabilidades positivas e negativas de cada palavra
-# e será utilizado para os cálculos futuros
-nb.calculate_probabilities()
+import os.path
+import NaiveBayesClassifier as NB
 
 
-# Para classificação/teste (exemplo usado de 300 arquivos de texto em cada pasta)
-dir_pos_teste = "diretorio/teste/pos/"
-dir_neg_teste = "diretorio/teste/neg/"
+def read_test_item(item_file):
+    contents = ""
+    with open(item_file) as f:
+        contents = f.read()
+    return contents
 
-classificador = nb.classifier(dir_pos_teste, dir_neg_teste)
 
-print "Probabilidade de ser positivo: ", nb.sum_positive(classificador)
-print "Probabilidade de ser negativo: ", nb.sum_negative(classificador)
+def create_classifier():
+    dir_pos = "pos"
+    dir_neg = "neg"
+
+    nb = NB.NaiveBayesClassifier(positive_corpus=dir_pos, negative_corpus=dir_neg)
+
+    nb.train_positive()
+    nb.train_negative()
+
+    # cria um dicionario com as probabilidades de cada palavra
+    nb.calculate_probabilities()
+
+    return nb
+
+
+def test_classifier(nb):
+    dir_pos_teste = "postest"
+    dir_neg_teste = "negtest"
+
+    # classificador = nb.classifier(dir_pos_teste, dir_neg_teste)
+
+    print "Testando positivos:"
+    for filename in os.listdir(dir_pos_teste):
+        item_contents = read_test_item(os.path.join(dir_pos_teste, filename))
+        item_class = nb.classify_item(item_contents)
+        print 'Classe: ', item_class
+
+    print "Testando negativos:"
+    for filename in os.listdir(dir_neg_teste):
+        item_contents = read_test_item(os.path.join(dir_neg_teste, filename))
+        item_class = nb.classify_item(item_contents)
+        print 'Classe: ', item_class
+
+
+if __name__ == '__main__':
+    nb = create_classifier()
+    test_classifier(nb)

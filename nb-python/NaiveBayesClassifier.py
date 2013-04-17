@@ -75,19 +75,17 @@ class NaiveBayesClassifier(object):
     """ Calcula a frequencia de palavras para um diretorio de arquivos
     """
     def getFrequency(self, dirc):
-        os.chdir(dirc)
-
         # objeto de frequencia inicial (vazio)
         freq = collections.Counter()
 
         for filename in os.listdir(dirc):
             # le conteudo do arquivo e atualiza
             # frequencia de ocorrencia de cada palavra
-            with open(filename) as f:
+            with open(os.path.join(dirc, filename)) as f:
                 words = tokenize(f.read())
                 freq.update(words)
 
-        print "Diretorio: ", dirc, " / Arquivos: ", len(os.listdir(dirc)), " / Palavras únicas: ", len(freq)
+        print "Diretorio: ", dirc, " / Arquivos: ", len(os.listdir(dirc)), " / Palavras unicas: ", len(freq)
         return freq
 
     """ Operacoes com Naive Bayes
@@ -132,12 +130,12 @@ class NaiveBayesClassifier(object):
     """ Operacoes de classificacao
     """
     def classifier(self, dir_positivo, dir_negativo):
-        #Para cada diretorio, percorrer os arquivos de texto e contar a frequencia geral das palavras
+        # Para cada diretorio, percorrer os arquivos de texto e contar a frequencia geral das palavras
         freq_geral = self.getFrequency(dir_positivo)
         freq_geral.update(self.getFrequency(dir_negativo))
 
         prob_geral = {}
-        #Para cada palavra a ser classificada, procurar no dicionario de probabilidades treinado
+        # Para cada palavra a ser classificada, procurar no dicionario de probabilidades treinado
         for word, prob in self.probdic.iteritems():
             if word in freq_geral:
                 prob_geral.setdefault(word, prob)
@@ -148,12 +146,12 @@ class NaiveBayesClassifier(object):
     def classify_item(self, item):
         words = tokenize(item)
 
-        # ignora palavras que não estão no dicionário de treinamento (probdic)
+        # ignora palavras que nao estao no dicionario de treinamento (probdic)
         # TODO: se a palavra nao existe em probdic, usar prob. de "palavra desconhecida"
         pos_probs = [self.probdic[w]['pos'] for w in words if w in self.probdic]
         neg_probs = [self.probdic[w]['neg'] for w in words if w in self.probdic]
-        total_pos_logprob = sum([math.log(p) for p in pos_probs])
-        total_neg_logprob = sum([math.log(p) for p in neg_probs])
+        total_pos_logprob = sum([math.log(p) for p in pos_probs if p > 0.0])
+        total_neg_logprob = sum([math.log(p) for p in neg_probs if p > 0.0])
         item_class = 'pos'
         if total_neg_logprob > total_pos_logprob:
             item_class = 'neg'
