@@ -8,7 +8,7 @@ import collections
 def tokenize(str):
     # ignora pontuacao, que pode ser util em alguns casos,
     # por ex. deteccao de spam
-    return re.findall('\w+', str)
+    return re.findall('\w+', str.lower())
 
 '''
 Classificador Naive Bayes em python.
@@ -84,7 +84,7 @@ class NaiveBayesClassifier(object):
             # le conteudo do arquivo e atualiza
             # frequencia de ocorrencia de cada palavra
             with open(filename) as f:
-                words = tokenize(f.read().lower())
+                words = tokenize(f.read())
                 freq.update(words)
 
         print "Diretorio: ", dirc, " / Arquivos: ", len(os.listdir(dirc)), " / Palavras únicas: ", len(freq)
@@ -93,12 +93,13 @@ class NaiveBayesClassifier(object):
     """ Operacoes com Naive Bayes
     """
     def calculate_probabilities(self):
-        """ Faz o calculo de probabilidades para determinar o quanto cada palavra pode ser positiva ou negativa
+        """ Faz o calculo de probabilidades para determinar o quanto cada
+            palavra pode ser positiva ou negativa.
 
             Para cada palavra:
             prob. pos. = (valor pos. / total de palavras pos)
                              /
-                         (valor pos. / total de palavras pos) + (valor neg. / total de palavras neg.)
+                   (valor pos. / total de palavras pos) + (valor neg. / total de palavras neg.)
         """
         # TODO: implementar Laplace smoothing
 
