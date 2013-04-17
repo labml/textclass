@@ -1,3 +1,13 @@
+import re
+import collections
+
+""" Tokenizer. TODO: definir um tokenizer mais geral
+"""
+def tokenize(str):
+    # ignora pontuacao, que pode ser util em alguns casos,
+    # por ex. deteccao de spam
+    return re.findall('\w+', str)
+
 '''
 Classificador Naive Bayes em python.
 - Cria um dicionario para a classificacao da frequencia das palavras
@@ -18,30 +28,30 @@ class NaiveBayesClassifier(object):
     """
 
     def __init__(self, positive_corpus='', negative_corpus=''):
-        #caminhos dos diretorios dos corpus
+        # caminhos dos diretorios dos corpus
         self.positive_corpus = positive_corpus
         self.negative_corpus = negative_corpus
 
-        self.learneddic = {} # {"palavra": {"pos": valor, "neg": valor}}
+        self.learneddic = {} # {"palavra": {"pos": n_ocorrencias, "neg": n_ocorrencias}}
         # Armazena as probabilidades para cada palavra em: positiva ou negativa
-        self.probdic = {}    # {"palavra": {"pos": valor, "neg": valor}}
+        self.probdic = {}    # {"palavra": {"pos": probabilidade, "neg": probabilidade}}
 
-        #variavel para coleta de informacoes estatisticas
+        # variavel para coleta de informacoes estatisticas
         self.info = ""
 
     """ Funcoes para treino
         Basicamente, calculam a frequencia das palavras nos arquivos do corpus
     """
     def train_positive(self):
-        #freq de palavras nos textos positivos
+        # freq de palavras nos textos positivos
         self.pos_freq = self.getFrequency(self.positive_corpus)
-        #atualiza no dicionario com a categoria
+        # atualiza no dicionario com a categoria
         self.updateLearnedDic(self.pos_freq, "pos")
 
     def train_negative(self):
-        #freq de palavras nos textos negativos
+        # freq de palavras nos textos negativos
         self.neg_freq = self.getFrequency(self.negative_corpus)
-        #atualiza no dicionario com a categoria
+        # atualiza no dicionario com a categoria
         self.updateLearnedDic(self.neg_freq, "neg")
 
     """ Atualiza o dicionario definido em __init__ de acordo com a frequencia da palavra e sua categoria
@@ -50,7 +60,7 @@ class NaiveBayesClassifier(object):
         for word, freq in wordsfreq.iteritems():
             self.learneddic.setdefault(word, {})
             self.learneddic[word].setdefault(cat, 0)
-            self.learneddic[word][cat]+=freq
+            self.learneddic[word][cat] += freq
 
     """ Atualiza o dicionario definido em __init__ de acordo com a probabilidade da palavra e sua
     categoria
@@ -59,7 +69,7 @@ class NaiveBayesClassifier(object):
         for word, freq in wordsfreq.iteritems():
             self.learneddic.setdefault(word, {})
             self.learneddic[word].setdefault(cat, 0)
-            self.learneddic[word][cat]+=freq
+            self.learneddic[word][cat] += freq
 
 
     """ Calcula a frequencia de palavras para um diretorio de arquivos
@@ -72,7 +82,7 @@ class NaiveBayesClassifier(object):
 
         for filename in os.listdir(dirc):
             # leia cada palavra do arquivo
-            words = re.findall('\w+', open(filename).read().lower())
+            words = tokenize(open(filename).read().lower())
             # atualiza a frequencia de palavras no arquivo com a variavel freq
             freq.update(collections.Counter(words))
 
@@ -89,6 +99,7 @@ class NaiveBayesClassifier(object):
                              /
                          (valor pos. / total de palavras pos) + (valor neg. / total de palavras neg.)
         """
+        # TODO implementar Laplace smoothing
 
         # o numero total de palavras de cada categoria
         total_positive = sum(self.pos_freq.values())
@@ -128,6 +139,14 @@ class NaiveBayesClassifier(object):
             if freq_geral.has_key(word):
                 prob_geral.setdefault(word, prob)
         return prob_geral
+
+    """ Classifica um item do conjunto de teste
+    """
+    def classify_item(self, item):
+        words = tokenize(item)
+        # TODO: se a palavra nao existe em probdic, usar prob. de "palavra desconhecida"
+        pos_probs = [self.probdic[word]['pos'] for word in words]
+        return 0 # TODO: implementar o resto
 
     def sum_positive(self, probdic_teste):
         """p(S) = (p1 * p2 ... pn)
