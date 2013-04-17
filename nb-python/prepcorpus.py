@@ -19,6 +19,7 @@ def expand_glob(glob_ptn):
     else:
         return exps[0]
 
+
 def move_numbered_files(numbers, sourcedir, destdir):
     for i in numbers:
         name_glob = 'cv{0:03d}_*.txt'.format(i)
@@ -26,6 +27,7 @@ def move_numbered_files(numbers, sourcedir, destdir):
         fname = expand_glob(os.path.join(sourcedir, name_glob))
         shutil.move(fname, os.path.join(destdir, os.path.basename(fname)))
     return
+
 
 # assumes that the program is in the base directory of review corpus
 def prepare_review_corpus(test_proportion, seed):
@@ -42,6 +44,7 @@ def prepare_review_corpus(test_proportion, seed):
     move_numbered_files(test_neg, neg, negtest)
     return
 
+
 # partitions the cases into training and testing (selected at random)
 # proportion is the proportion of cases in test
 # assume balanced classes
@@ -52,8 +55,10 @@ def partition_traintest(cases, proportion):
     traincases = cases.difference(testcases)
     return traincases, testcases
 
+
 def download_file(fileurl, localfile):
     return urllib.urlretrieve(fileurl, localfile)
+
 
 def prepare_corpus(corpus_url, test_proportion, seed):
     print 'Downloading ' + corpus_url + ' ...'

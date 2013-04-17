@@ -14,7 +14,7 @@ import NaiveBayesClassifier
 dir_pos = "diretorio/pos/"
 dir_neg = "diretorio/neg/"
 
-nb = NaiveBayesClassifier(positive_corpus=dir_pos,negative_corpus=dir_neg)
+nb = NaiveBayesClassifier(positive_corpus=dir_pos, negative_corpus=dir_neg)
 
 nb.train_positive()
 nb.train_negative()
@@ -28,7 +28,7 @@ nb.calculate_probabilities()
 dir_pos_teste = "diretorio/teste/pos/"
 dir_neg_teste = "diretorio/teste/neg/"
 
-classificador = nb.classifier(dir_pos_teste,dir_neg_teste)
+classificador = nb.classifier(dir_pos_teste, dir_neg_teste)
 
-print "Probabilidade de ser positivo: ",nb.sum_positive(classificador)
-print "Probabilidade de ser negativo: ",nb.sum_negative(classificador)
+print "Probabilidade de ser positivo: ", nb.sum_positive(classificador)
+print "Probabilidade de ser negativo: ", nb.sum_negative(classificador)
