@@ -1,9 +1,10 @@
 """
 Download do corpus:
 
-https://github.com/nltk/nltk_data/blob/gh-pages/packages/corpora/movie_reviews.zip
+http://www.cs.cornell.edu/people/pabo/movie-review-data/review_polarity.tar.gz
 
-Arquivo com duas pastas com reviews positivos e negativos. Funciona com a mesma ideia de um classificador de spam.
+Arquivo com duas pastas com reviews positivos e negativos.
+Funciona com a mesma ideia de um classificador de spam.
 """
 
 import NaiveBayesClassifier
