@@ -1,15 +1,3 @@
-import os
-import re
-import math
-import collections
-
-""" Tokenizer. TODO: definir um tokenizer mais geral
-"""
-def tokenize(str):
-    # ignora pontuacao, que pode ser util em alguns casos,
-    # por ex. deteccao de spam
-    return re.findall('\w+', str.lower())
-
 '''
 Classificador Naive Bayes em python.
 - Cria um dicionario para a classificacao da frequencia das palavras
@@ -22,6 +10,21 @@ Baseado no codigo disponivel em:
 - https://github.com/euclid1729/naive-bayes-spam-classifier-
 
 '''
+
+import os
+import re
+import math
+import collections
+
+
+def tokenize(str):
+    """ Tokenizer. TODO: definir um tokenizer mais geral
+    """
+    # ignora pontuacao, que pode ser util em alguns casos,
+    # por ex. deteccao de spam
+    return re.findall('\w+', str.lower())
+
+
 class NaiveBayesClassifier(object):
     """Classificador Naive Bayes
         positive_corpus =  diretorio com os arquivos do corpus positivo
@@ -34,19 +37,29 @@ class NaiveBayesClassifier(object):
         self.negative_corpus = negative_corpus
 
         # {"palavra": {"pos": n_ocorrencias, "neg": n_ocorrencias}}
-        self.learneddic = {}
+        self.counts = {}
 
         # {"palavra": {"pos": probabilidade, "neg": probabilidade}}
-        self.probdic = {}
+        self.probs = {}
 
         self.pos_freq = {}
         self.neg_freq = {}
+
+        self.unk_word = 'xUnkx'
 
         # TODO: definir conjunto de classes como um campo do objeto,
         # p/ generalizar classificacao
 
         # variavel para coleta de informacoes estatisticas
         self.info = ""
+
+    def train(self):
+        pass
+
+    def train_class():
+        """
+        """
+        pass
 
     """ Funcoes para treino
         Basicamente, calculam a frequencia das palavras nos arquivos do corpus
@@ -55,21 +68,21 @@ class NaiveBayesClassifier(object):
         # freq de palavras nos textos positivos
         self.pos_freq = self.getFrequency(self.positive_corpus)
         # atualiza no dicionario com a categoria
-        self.updateLearnedDic(self.pos_freq, "pos")
+        self.update_counts(self.pos_freq, "pos")
 
     def train_negative(self):
         # freq de palavras nos textos negativos
         self.neg_freq = self.getFrequency(self.negative_corpus)
         # atualiza no dicionario com a categoria
-        self.updateLearnedDic(self.neg_freq, "neg")
+        self.update_counts(self.neg_freq, "neg")
 
     """ Atualiza o dicionario definido em __init__ de acordo com a frequencia da palavra e sua categoria
     """
-    def updateLearnedDic(self, wordsfreq, cat):
+    def update_counts(self, wordsfreq, cat):
         for word, freq in wordsfreq.iteritems():
-            self.learneddic.setdefault(word, {})
-            self.learneddic[word].setdefault(cat, 0)
-            self.learneddic[word][cat] += freq
+            self.counts.setdefault(word, {})
+            self.counts[word].setdefault(cat, 0)
+            self.counts[word][cat] += freq
 
     """ Calcula a frequencia de palavras para um diretorio de arquivos
     """
@@ -94,37 +107,53 @@ class NaiveBayesClassifier(object):
             palavra pode ser positiva ou negativa.
 
             Para cada palavra:
-            prob. pos. = (valor pos. / total de palavras pos)
-                             /
-                   (valor pos. / total de palavras pos) + (valor neg. / total de palavras neg.)
+            p(c=1 | w) =          p(w | c=1)p(c=1)
+                        -------------------------------------
+                         p(w | c=1)p(c=1)  + p(w | c=2)p(c=2)
+
+            Como o fator normalizador e' o mesmo para as duas classes,
+            e so' queremos achar a maior probabilidade, o denominador nao
+            precisa ser calculado.
+
+            p(w | c=1) = (n. de w em itens positivos / n. de palavras nos itens positivos)
+
+            Laplace smoothing adiciona contagens ficticias no numerador e
+            denominador para suavizar as probabilidades de palavras nao vistas em
+            alguma classe
         """
-        # TODO: implementar Laplace smoothing
 
         # o numero total de palavras de cada categoria
         total_positive = sum(self.pos_freq.values())
         total_negative = sum(self.neg_freq.values())
 
+        vocab_size = len(self.counts.keys())
+
+        # TODO: calculate priors for classes
+
         # Para cada palavra no dicionario de frequencia ...
-        for word, freq in self.learneddic.iteritems():
+        for word, freq in self.counts.iteritems():
 
-            # ajustando entrada para o probdic
-            self.probdic.setdefault(word, {})       # adiciona palavra em probdic
-            self.probdic[word].setdefault("pos", 0)
-            self.probdic[word].setdefault("neg", 0)
+            # ajustando entrada para o dicionario de probabilidades
+            self.probs.setdefault(word, {})       # adiciona palavra em probs
+            self.probs[word].setdefault("pos", 0)
+            self.probs[word].setdefault("neg", 0)
 
-            # total de registros positivos e negativos
-            positive_count = freq.get("pos", 0)
-            negative_count = freq.get("neg", 0)
+            # ocorrencias da palavra nas classes (+1 for Laplace smoothing)
+            positive_count = freq.get("pos", 0) + 1
+            negative_count = freq.get("neg", 0) + 1
 
-            numerator = (float(positive_count) / total_positive)
-            denominator = ((float(positive_count) / total_positive) +
-                           (float(negative_count) / total_negative))
-            self.probdic[word]["pos"] = numerator / denominator
+            pw_given_pos = (float(positive_count) /
+                            (total_positive + vocab_size + 1))
+            pw_given_neg = (float(negative_count) /
+                            (total_negative + vocab_size + 1))
 
-            numerator = (float(negative_count) / total_negative)
-            denominator = ((float(negative_count) / total_negative) +
-                           (float(positive_count) / total_positive))
-            self.probdic[word]["neg"] = numerator / denominator
+            self.probs[word]["pos"] = pw_given_pos
+            self.probs[word]["neg"] = pw_given_neg
+
+            # probabilities for the unknown word
+            self.probs[self.unk_word] = {}
+            self.probs[self.unk_word]['pos'] = 1.0 / (total_positive + vocab_size + 1)
+            self.probs[self.unk_word]['neg'] = 1.0 / (total_negative + vocab_size + 1)
 
     """ Operacoes de classificacao
     """
@@ -135,42 +164,31 @@ class NaiveBayesClassifier(object):
 
         prob_geral = {}
         # Para cada palavra a ser classificada, procurar no dicionario de probabilidades treinado
-        for word, prob in self.probdic.iteritems():
+        for word, prob in self.probs.iteritems():
             if word in freq_geral:
                 prob_geral.setdefault(word, prob)
         return prob_geral
 
-    """ Classifica um item do conjunto de teste
-    """
+    def __word_probability(self, word, wclass):
+        if word in self.probs:
+            prob = self.probs[word][wclass]
+        else:
+            prob = self.probs[self.unk_word][wclass]
+        return prob
+
     def classify_item(self, item):
+        """ Classifica um item do conjunto de teste
+        """
+
         words = tokenize(item)
 
-        # ignora palavras que nao estao no dicionario de treinamento (probdic)
-        # TODO: se a palavra nao existe em probdic, usar prob. de "palavra desconhecida"
-        pos_probs = [self.probdic[w]['pos'] for w in words if w in self.probdic]
-        neg_probs = [self.probdic[w]['neg'] for w in words if w in self.probdic]
+        # ignora palavras que nao estao no dicionario de treinamento (probs)
+        # TODO: se a palavra nao existe em probs, usar prob. de "palavra desconhecida"
+        pos_probs = [self.__word_probability(w, 'pos') for w in words]
+        neg_probs = [self.__word_probability(w, 'neg') for w in words]
         total_pos_logprob = sum([math.log(p) for p in pos_probs if p > 0.0])
         total_neg_logprob = sum([math.log(p) for p in neg_probs if p > 0.0])
         item_class = 'pos'
         if total_neg_logprob > total_pos_logprob:
             item_class = 'neg'
         return item_class
-
-    def sum_positive(self, probdic_teste):
-        """p(S) = (p1 * p2 ... pn)
-                    /
-                  ( (p1 * p2 ... * pn) + ( (1 - p1) * (1 - p2) ... * (1 - pn) ) )
-        """
-        # nao muito eficiente, refazer depois de testar
-        numerator = sum([prob["pos"] for word, prob in probdic_teste.iteritems()])
-        denominator = numerator + sum([1 - prob["pos"] for word, prob in probdic_teste.iteritems()])
-        return float(numerator) / denominator
-
-    def sum_negative(self, probdic_teste):
-        """p(S) = (p1 * p2 ... pn)
-                    /
-             ( (p1 * p2 ... * pn) + ( (1 - p1) * (1 - p2) ... * (1 - pn) ) )"""
-
-        numerator = sum([prob["neg"] for word, prob in probdic_teste.iteritems()])
-        denominator = numerator + sum([1 - prob["neg"] for word, prob in probdic_teste.iteritems()])
-        return float(numerator) / denominator
