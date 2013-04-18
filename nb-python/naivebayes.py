@@ -9,7 +9,6 @@ Baseado no codigo disponivel em:
 - https://github.com/stuntgoat/Generic-Naive-Bayesian-Classifier
 - https://github.com/euclid1729/naive-bayes-spam-classifier-
 
-TODO: Implementar classificacao entre textos
 '''
 
 import os
@@ -45,6 +44,8 @@ class NaiveBayesClassifier(object):
 
         self.pos_freq = {}
         self.neg_freq = {}
+
+        self.unk_word = 'xUnkx'
 
         # TODO: definir conjunto de classes como um campo do objeto,
         # p/ generalizar classificacao
@@ -149,6 +150,11 @@ class NaiveBayesClassifier(object):
             self.probs[word]["pos"] = pw_given_pos
             self.probs[word]["neg"] = pw_given_neg
 
+            # probabilities for the unknown word
+            self.probs[self.unk_word] = {}
+            self.probs[self.unk_word]['pos'] = 1.0 / (total_positive + vocab_size + 1)
+            self.probs[self.unk_word]['neg'] = 1.0 / (total_negative + vocab_size + 1)
+
     """ Operacoes de classificacao
     """
     def classifier(self, dir_positivo, dir_negativo):
@@ -163,15 +169,23 @@ class NaiveBayesClassifier(object):
                 prob_geral.setdefault(word, prob)
         return prob_geral
 
-    """ Classifica um item do conjunto de teste
-    """
+    def __word_probability(self, word, wclass):
+        if word in self.probs:
+            prob = self.probs[word][wclass]
+        else:
+            prob = self.probs[self.unk_word][wclass]
+        return prob
+
     def classify_item(self, item):
+        """ Classifica um item do conjunto de teste
+        """
+
         words = tokenize(item)
 
         # ignora palavras que nao estao no dicionario de treinamento (probs)
         # TODO: se a palavra nao existe em probs, usar prob. de "palavra desconhecida"
-        pos_probs = [self.probs[w]['pos'] for w in words if w in self.probs]
-        neg_probs = [self.probs[w]['neg'] for w in words if w in self.probs]
+        pos_probs = [self.__word_probability(w, 'pos') for w in words]
+        neg_probs = [self.__word_probability(w, 'neg') for w in words]
         total_pos_logprob = sum([math.log(p) for p in pos_probs if p > 0.0])
         total_neg_logprob = sum([math.log(p) for p in neg_probs if p > 0.0])
         item_class = 'pos'
