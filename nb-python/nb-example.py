@@ -8,7 +8,7 @@ Funciona com a mesma ideia de um classificador de spam.
 """
 
 import os.path
-import NaiveBayesClassifier as NB
+import naivebayes as nb
 
 
 def read_test_item(item_file):
@@ -22,18 +22,19 @@ def create_classifier():
     dir_pos = "pos"
     dir_neg = "neg"
 
-    nb = NB.NaiveBayesClassifier(positive_corpus=dir_pos, negative_corpus=dir_neg)
+    nbc = nb.NaiveBayesClassifier(positive_corpus=dir_pos,
+                                  negative_corpus=dir_neg)
 
-    nb.train_positive()
-    nb.train_negative()
+    nbc.train_positive()
+    nbc.train_negative()
 
     # cria um dicionario com as probabilidades de cada palavra
-    nb.calculate_probabilities()
+    nbc.calculate_probabilities()
 
-    return nb
+    return nbc
 
 
-def test_classifier(nb):
+def test_classifier(nbc):
     dir_pos_teste = "postest"
     dir_neg_teste = "negtest"
 
@@ -44,7 +45,7 @@ def test_classifier(nb):
     print "Testando positivos..."
     for filename in os.listdir(dir_pos_teste):
         item_contents = read_test_item(os.path.join(dir_pos_teste, filename))
-        item_class = nb.classify_item(item_contents)
+        item_class = nbc.classify_item(item_contents)
         if item_class == 'pos':
             tp += 1
         else:
@@ -53,7 +54,7 @@ def test_classifier(nb):
     print "Testando negativos..."
     for filename in os.listdir(dir_neg_teste):
         item_contents = read_test_item(os.path.join(dir_neg_teste, filename))
-        item_class = nb.classify_item(item_contents)
+        item_class = nbc.classify_item(item_contents)
         if item_class == 'neg':
             tn += 1
         else:
@@ -69,5 +70,5 @@ def test_classifier(nb):
     print 'F1 score: ', 2 * (precision * recall) / (precision + recall)
 
 if __name__ == '__main__':
-    nb = create_classifier()
-    test_classifier(nb)
+    nbc = create_classifier()
+    test_classifier(nbc)
