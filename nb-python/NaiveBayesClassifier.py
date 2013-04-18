@@ -21,7 +21,6 @@ Baseado no codigo disponivel em:
 - https://github.com/stuntgoat/Generic-Naive-Bayesian-Classifier
 - https://github.com/euclid1729/naive-bayes-spam-classifier-
 
-TODO: Implementar classificacao entre textos
 '''
 class NaiveBayesClassifier(object):
     """Classificador Naive Bayes
