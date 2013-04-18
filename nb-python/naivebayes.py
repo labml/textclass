@@ -1,15 +1,3 @@
-import os
-import re
-import math
-import collections
-
-""" Tokenizer. TODO: definir um tokenizer mais geral
-"""
-def tokenize(str):
-    # ignora pontuacao, que pode ser util em alguns casos,
-    # por ex. deteccao de spam
-    return re.findall('\w+', str.lower())
-
 '''
 Classificador Naive Bayes em python.
 - Cria um dicionario para a classificacao da frequencia das palavras
@@ -23,6 +11,21 @@ Baseado no codigo disponivel em:
 
 TODO: Implementar classificacao entre textos
 '''
+
+import os
+import re
+import math
+import collections
+
+
+def tokenize(str):
+    """ Tokenizer. TODO: definir um tokenizer mais geral
+    """
+    # ignora pontuacao, que pode ser util em alguns casos,
+    # por ex. deteccao de spam
+    return re.findall('\w+', str.lower())
+
+
 class NaiveBayesClassifier(object):
     """Classificador Naive Bayes
         positive_corpus =  diretorio com os arquivos do corpus positivo
@@ -134,12 +137,14 @@ class NaiveBayesClassifier(object):
             self.probs[word].setdefault("pos", 0)
             self.probs[word].setdefault("neg", 0)
 
-            # total de registros positivos e negativos (+1 for Laplace smoothing)
+            # ocorrencias da palavra nas classes (+1 for Laplace smoothing)
             positive_count = freq.get("pos", 0) + 1
             negative_count = freq.get("neg", 0) + 1
 
-            pw_given_pos = (float(positive_count) / (total_positive + vocab_size))
-            pw_given_neg = (float(negative_count) / (total_negative + vocab_size))
+            pw_given_pos = (float(positive_count) /
+                            (total_positive + vocab_size + 1))
+            pw_given_neg = (float(negative_count) /
+                            (total_negative + vocab_size + 1))
 
             self.probs[word]["pos"] = pw_given_pos
             self.probs[word]["neg"] = pw_given_neg
