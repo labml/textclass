@@ -10,7 +10,18 @@ Baseado em:
 - Livro: Programming Collective Intelligence (cap. Document Filtering)
 
 '''
-import os, re, collections, math
+import os
+import re
+import collections
+import math
+
+def tokenize(str):
+    """ Tokenizer. TODO: definir um tokenizer mais geral
+    """
+    # ignora pontuacao, que pode ser util em alguns casos,
+    # por ex. deteccao de spam
+    return re.findall('\w+', str.lower())
+
 
 class NaiveBayesClassifier(object):
     """Classificador Naive Bayes
@@ -19,15 +30,19 @@ class NaiveBayesClassifier(object):
     """
     
     def __init__(self, positive_corpus='',negative_corpus=''):
-        #caminhos dos diretorios dos corpus
+        # caminhos dos diretorios dos corpus
         self.positive_corpus = positive_corpus
         self.negative_corpus = negative_corpus
+
+        # {"pos": n_documentos_positivos, "neg": n_documentos_negativos}
+        self.doc_counts = {} 
         
-        self.learneddic = {} # {"palavra": {"pos": valor, "neg": valor}}
-        
-        # Armazena as probabilidades para cada palavra em: positiva ou negativa
-        self.probdic = {}    # {"palavra": {"pos": valor, "neg": valor}} 
-        
+        # {"palavra": {"pos": n_ocorrencias, "neg": n_ocorrencias}}
+        self.counts = {}
+
+        # {"palavra": {"pos": probabilidade, "neg": probabilidade}}
+        self.probs = {}
+
     """ Funcoes para treino
         Os passos para o treinamento:
             1. calcular a frequencia (numero de vezes que a palavra aparece nos documentos...)
@@ -39,119 +54,131 @@ class NaiveBayesClassifier(object):
                              }
 
     """
+    def train(self):
+        pass
+
+    def train_class():
+        """
+        """
+        pass
+
+
     def train_positive(self):
         #freq de palavras nos textos positivos
         self.pos_freq = self.getFrequency(self.positive_corpus)
         
         # quantos documentos nessa categoria?
-        self.count_positive = len(os.listdir(self.positive_corpus))
+        self.update_doc_counts("pos",len(os.listdir(self.positive_corpus)))
         
         #atualiza no dicionario com a categoria
-        self.updateLearnedDic(self.pos_freq,"pos")
-
+        self.update_counts(self.pos_freq,"pos")
+   
     def train_negative(self):
         #freq de palavras nos textos negativos
         self.neg_freq = self.getFrequency(self.negative_corpus)
         
         # quantos documentos nessa categoria?
-        self.count_negative = len(os.listdir(self.negative_corpus))
+        # count_positivo count_negative
+        self.update_doc_counts("neg", len(os.listdir(self.negative_corpus)))
         
         #atualiza no dicionario com a categoria
-        self.updateLearnedDic(self.neg_freq,"neg")
-    
+        self.update_counts(self.neg_freq,"neg")
+
+    """ Atualiza o dicionario definido em __init__ com o numero de documentos lidos em cada categoria
+    """
+    def update_doc_counts(self,cat,count):
+        self.doc_counts.setdefault("pos",0)
+        self.doc_counts.setdefault("neg",0)
+        self.doc_counts[cat]=count
+        
     """ Atualiza o dicionario definido em __init__ de acordo com a frequencia da palavra e sua categoria
     """
-    def updateLearnedDic(self,wordsfreq,cat):
+    def update_counts(self,wordsfreq,cat):
         for word,freq in wordsfreq.iteritems():
             # entrada default
-            self.learneddic.setdefault(word,{})
-            self.learneddic[word].setdefault("pos",0)
-            self.learneddic[word].setdefault("neg",0)
+            self.counts.setdefault(word,{})
+            self.counts[word].setdefault("pos",0)
+            self.counts[word].setdefault("neg",0)
             # atualiza
-            self.learneddic[word][cat]+=freq
+            self.counts[word][cat]+=freq
     
     """ Calcula a frequencia de palavras para um diretorio de arquivos
     """
     def getFrequency(self,dirc):
-        os.chdir(dirc)
-        
-        #objeto de frequencia inicial (vazio)
         freq = collections.Counter()
-
         for filename in os.listdir(dirc):
-            # leia cada palavra do arquivo
-            words = re.findall('\w+', open(filename).read().lower())
-            # atualiza a frequencia de palavras no arquivo com a variavel freq
-            freq.update(collections.Counter(words))
+            # frequencia de ocorrencia de cada palavra
+            with open(os.path.join(dirc, filename)) as f:
+                words = tokenize(f.read())
+                freq.update(words)
             
         print "Diretorio: ", dirc, " / Arquivos: ", len(os.listdir(dirc)), " / Palavras unicas: ", len(freq)
         return freq
 
-    """ Operacoes com Naive Bayes
+    """ Faz o calculo de probabilidades para determinar o quanto cada palavra pode ser positiva ou negativa
     """
     def calculate_probabilities(self):
-        """ Faz o calculo de probabilidades para determinar o quanto cada palavra pode ser positiva ou negativa
-        """
         weight=1.0
         ap=0.5
         
-        for word,freq in self.learneddic.iteritems():
-            fprob_pos = float(freq["pos"]) / float(self.count_positive)
-            fprob_neg = float(freq["neg"]) / float(self.count_negative)
+        for word,freq in self.counts.iteritems():
+            fprob_pos = float(freq["pos"]) / float(self.doc_counts["pos"])
+            fprob_neg = float(freq["neg"]) / float(self.doc_counts["neg"])
             
-            sum_word = freq["pos"] + freq["neg"]  
+            sum_words = freq["pos"] + freq["neg"]  
             
             # ajustando entrada para o dicionario de probabilidades
-            self.probdic.setdefault(word,{})       
-            self.probdic[word].setdefault("pos",0)
-            self.probdic[word].setdefault("neg",0)
+            self.probs.setdefault(word,{})       
+            self.probs[word].setdefault("pos",0)
+            self.probs[word].setdefault("neg",0)
             
             # formula = ((weight*ap)+(totals*basicprob))/ (weight+totals)
-            self.probdic[word]["pos"] = ((weight * ap) + (sum_word + fprob_pos)) / (weight + sum_word)
-            self.probdic[word]["neg"] = ((weight * ap) + (sum_word + fprob_neg)) / (weight + sum_word)
+            self.probs[word]["pos"] = ((weight * ap) + (sum_words + fprob_pos)) / (weight + sum_words)
+            self.probs[word]["neg"] = ((weight * ap) + (sum_words + fprob_neg)) / (weight + sum_words)
             
             
     """ Operacoes de classificacao
+        Recebe um documento e determina sua categoria.
+        TODO: otimizar 
     """
-    def naive_bayes(self, doc):
+    def classifier(self, doc):
         # extrair todas as palavras do documento
         doc_words = re.findall('\w+', open(doc).read().lower())
         doc_words = collections.Counter(doc_words)
-        
-        # para cada palavra do documento a ser classificado
-        # procura no dicionario de probabilidades e salva...
+
+        # para cada palavra do doc. procura em self.probs e salva
         doc_prob = {}
-        for word, prob in self.probdic.iteritems():
+        for word, prob in self.probs.iteritems():
             if doc_words.has_key(word):
                 doc_prob.setdefault(word,prob)
+        
+        """ Bayes:
+            Pr(Cat|Doc) = Pr(Doc|Cat) Pr(Cat)  = log Pr(Doc|Cat) + log Pr(Cat) 
+                          -------------------
+                                Pr(Doc)
+
+            Pr(Doc|Cat) = mult. as prob. de cada palavra para a categoria
             
-        """Calcular Pr(Documento|Categoria):
-            - para categoria:
-                - multiplicar as probabilidades de cada palavra que o documento a ser classificado tem em comum no dicionario de
-                  probabilidades
-        """ 
+            Pr(Cat) = (n de docs na cat)
+                      ------------------ 
+                        total de docs
+
+            Pr(Doc) = eliminado
+        """
+        
+        # Pr(Doc|Cat) ...
         pmult_pos = 0
         pmult_neg = 0
         for word,prob in doc_prob.iteritems():
             # trocando multiplicacao de probabilidades por soma de logaritmos
             pmult_pos += math.log(prob["pos"])
             pmult_neg += math.log(prob["neg"])
-
-        """Probabilidade Bayesiana agora... 
-            Queremos calcular Pr(Categoria | Documento) = Pr(Documento | Categoria) x Pr(Categoria) / Pr(Documento)
-
-            Como Pr(Documento) e  um valor comum para todas as categorias, ele e eliminado pois nao afeta o resultado final 
-            Pr(Categoria) = numero de documentos na categoria / total de documentos
-
-            Pr(Categoria|Documento) = log Pr(Documento | Categoria) + log Pr(Categoria) 
-        """
-        total_doc = self.count_positive + self.count_negative
-        
-        # probabilidade de que o documento seja positivo...
-        prob_doc_pos = math.log(float(self.count_positive) / float(total_doc)) + pmult_pos
-       
-        # probabilidade de que o documento seja negativo...
-        prob_doc_neg = math.log(float(self.count_negative) / float(total_doc)) + pmult_neg 
+            
+        total_doc = self.doc_counts["pos"] + self.doc_counts["neg"]
+        # Pr(cat = POSITIVO| Doc)
+        prob_doc_pos = math.log(float(self.doc_counts["pos"]) / float(total_doc)) + pmult_pos
+        # Pr(cat = NEGATIVO| Doc)
+        prob_doc_neg = math.log(float(self.doc_counts["neg"]) / float(total_doc)) + pmult_neg 
    
         #resultado...
         if prob_doc_pos > prob_doc_neg: 
