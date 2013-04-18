@@ -103,17 +103,28 @@ class NaiveBayesClassifier(object):
             palavra pode ser positiva ou negativa.
 
             Para cada palavra:
-            prob. pos. = (valor pos. / total de palavras pos)
-                             /
-                   (valor pos. / total de palavras pos) + (valor neg. / total de palavras neg.)
+            p(c=1 | w) =          p(w | c=1)p(c=1)
+                        -------------------------------------
+                         p(w | c=1)p(c=1)  + p(w | c=2)p(c=2)
+
+            Como o fator normalizador e' o mesmo para as duas classes,
+            e so' queremos achar a maior probabilidade, o denominador nao
+            precisa ser calculado.
+
+            p(w | c=1) = (n. de w em itens positivos / n. de palavras nos itens positivos)
+
+            Laplace smoothing adiciona contagens ficticias no numerador e
+            denominador para suavizar as probabilidades de palavras nao vistas em
+            alguma classe
         """
-        # TODO: implementar Laplace smoothing
 
         # o numero total de palavras de cada categoria
         total_positive = sum(self.pos_freq.values())
         total_negative = sum(self.neg_freq.values())
 
         vocab_size = len(self.counts.keys())
+
+        # TODO: calculate priors for classes
 
         # Para cada palavra no dicionario de frequencia ...
         for word, freq in self.counts.iteritems():
@@ -123,19 +134,15 @@ class NaiveBayesClassifier(object):
             self.probs[word].setdefault("pos", 0)
             self.probs[word].setdefault("neg", 0)
 
-            # total de registros positivos e negativos
-            positive_count = freq.get("pos", 0)
-            negative_count = freq.get("neg", 0)
+            # total de registros positivos e negativos (+1 for Laplace smoothing)
+            positive_count = freq.get("pos", 0) + 1
+            negative_count = freq.get("neg", 0) + 1
 
-            numerator = (float(positive_count) / total_positive)
-            denominator = ((float(positive_count) / total_positive) +
-                           (float(negative_count) / total_negative))
-            self.probs[word]["pos"] = numerator / denominator
+            pw_given_pos = (float(positive_count) / (total_positive + vocab_size))
+            pw_given_neg = (float(negative_count) / (total_negative + vocab_size))
 
-            numerator = (float(negative_count) / total_negative)
-            denominator = ((float(negative_count) / total_negative) +
-                           (float(positive_count) / total_positive))
-            self.probs[word]["neg"] = numerator / denominator
+            self.probs[word]["pos"] = pw_given_pos
+            self.probs[word]["neg"] = pw_given_neg
 
     """ Operacoes de classificacao
     """
