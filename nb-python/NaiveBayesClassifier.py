@@ -35,10 +35,10 @@ class NaiveBayesClassifier(object):
         self.negative_corpus = negative_corpus
 
         # {"palavra": {"pos": n_ocorrencias, "neg": n_ocorrencias}}
-        self.learneddic = {}
+        self.counts = {}
 
         # {"palavra": {"pos": probabilidade, "neg": probabilidade}}
-        self.probdic = {}
+        self.probs = {}
 
         self.pos_freq = {}
         self.neg_freq = {}
@@ -49,6 +49,14 @@ class NaiveBayesClassifier(object):
         # variavel para coleta de informacoes estatisticas
         self.info = ""
 
+    def train(self):
+        pass
+
+    def train_class():
+        """
+        """
+        pass
+
     """ Funcoes para treino
         Basicamente, calculam a frequencia das palavras nos arquivos do corpus
     """
@@ -56,21 +64,21 @@ class NaiveBayesClassifier(object):
         # freq de palavras nos textos positivos
         self.pos_freq = self.getFrequency(self.positive_corpus)
         # atualiza no dicionario com a categoria
-        self.updateLearnedDic(self.pos_freq, "pos")
+        self.update_counts(self.pos_freq, "pos")
 
     def train_negative(self):
         # freq de palavras nos textos negativos
         self.neg_freq = self.getFrequency(self.negative_corpus)
         # atualiza no dicionario com a categoria
-        self.updateLearnedDic(self.neg_freq, "neg")
+        self.update_counts(self.neg_freq, "neg")
 
     """ Atualiza o dicionario definido em __init__ de acordo com a frequencia da palavra e sua categoria
     """
-    def updateLearnedDic(self, wordsfreq, cat):
+    def update_counts(self, wordsfreq, cat):
         for word, freq in wordsfreq.iteritems():
-            self.learneddic.setdefault(word, {})
-            self.learneddic[word].setdefault(cat, 0)
-            self.learneddic[word][cat] += freq
+            self.counts.setdefault(word, {})
+            self.counts[word].setdefault(cat, 0)
+            self.counts[word][cat] += freq
 
     """ Calcula a frequencia de palavras para um diretorio de arquivos
     """
@@ -105,13 +113,15 @@ class NaiveBayesClassifier(object):
         total_positive = sum(self.pos_freq.values())
         total_negative = sum(self.neg_freq.values())
 
-        # Para cada palavra no dicionario de frequencia ...
-        for word, freq in self.learneddic.iteritems():
+        vocab_size = len(self.counts.keys())
 
-            # ajustando entrada para o probdic
-            self.probdic.setdefault(word, {})       # adiciona palavra em probdic
-            self.probdic[word].setdefault("pos", 0)
-            self.probdic[word].setdefault("neg", 0)
+        # Para cada palavra no dicionario de frequencia ...
+        for word, freq in self.counts.iteritems():
+
+            # ajustando entrada para o dicionario de probabilidades
+            self.probs.setdefault(word, {})       # adiciona palavra em probs
+            self.probs[word].setdefault("pos", 0)
+            self.probs[word].setdefault("neg", 0)
 
             # total de registros positivos e negativos
             positive_count = freq.get("pos", 0)
@@ -120,12 +130,12 @@ class NaiveBayesClassifier(object):
             numerator = (float(positive_count) / total_positive)
             denominator = ((float(positive_count) / total_positive) +
                            (float(negative_count) / total_negative))
-            self.probdic[word]["pos"] = numerator / denominator
+            self.probs[word]["pos"] = numerator / denominator
 
             numerator = (float(negative_count) / total_negative)
             denominator = ((float(negative_count) / total_negative) +
                            (float(positive_count) / total_positive))
-            self.probdic[word]["neg"] = numerator / denominator
+            self.probs[word]["neg"] = numerator / denominator
 
     """ Operacoes de classificacao
     """
@@ -136,7 +146,7 @@ class NaiveBayesClassifier(object):
 
         prob_geral = {}
         # Para cada palavra a ser classificada, procurar no dicionario de probabilidades treinado
-        for word, prob in self.probdic.iteritems():
+        for word, prob in self.probs.iteritems():
             if word in freq_geral:
                 prob_geral.setdefault(word, prob)
         return prob_geral
@@ -146,32 +156,13 @@ class NaiveBayesClassifier(object):
     def classify_item(self, item):
         words = tokenize(item)
 
-        # ignora palavras que nao estao no dicionario de treinamento (probdic)
-        # TODO: se a palavra nao existe em probdic, usar prob. de "palavra desconhecida"
-        pos_probs = [self.probdic[w]['pos'] for w in words if w in self.probdic]
-        neg_probs = [self.probdic[w]['neg'] for w in words if w in self.probdic]
+        # ignora palavras que nao estao no dicionario de treinamento (probs)
+        # TODO: se a palavra nao existe em probs, usar prob. de "palavra desconhecida"
+        pos_probs = [self.probs[w]['pos'] for w in words if w in self.probs]
+        neg_probs = [self.probs[w]['neg'] for w in words if w in self.probs]
         total_pos_logprob = sum([math.log(p) for p in pos_probs if p > 0.0])
         total_neg_logprob = sum([math.log(p) for p in neg_probs if p > 0.0])
         item_class = 'pos'
         if total_neg_logprob > total_pos_logprob:
             item_class = 'neg'
         return item_class
-
-    def sum_positive(self, probdic_teste):
-        """p(S) = (p1 * p2 ... pn)
-                    /
-                  ( (p1 * p2 ... * pn) + ( (1 - p1) * (1 - p2) ... * (1 - pn) ) )
-        """
-        # nao muito eficiente, refazer depois de testar
-        numerator = sum([prob["pos"] for word, prob in probdic_teste.iteritems()])
-        denominator = numerator + sum([1 - prob["pos"] for word, prob in probdic_teste.iteritems()])
-        return float(numerator) / denominator
-
-    def sum_negative(self, probdic_teste):
-        """p(S) = (p1 * p2 ... pn)
-                    /
-             ( (p1 * p2 ... * pn) + ( (1 - p1) * (1 - p2) ... * (1 - pn) ) )"""
-
-        numerator = sum([prob["neg"] for word, prob in probdic_teste.iteritems()])
-        denominator = numerator + sum([1 - prob["neg"] for word, prob in probdic_teste.iteritems()])
-        return float(numerator) / denominator
