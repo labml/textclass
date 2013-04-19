@@ -182,6 +182,6 @@ class NaiveBayesClassifier(object):
    
         #resultado...
         if prob_doc_pos > prob_doc_neg: 
-            return "POSITIVO"
+            return "pos"
         else:
-            return "NEGATIVO"
+            return "neg"
