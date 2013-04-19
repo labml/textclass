@@ -20,8 +20,8 @@ def read_test_item(item_file):
 
 
 def create_classifier():
-    dir_pos = BASE_DIR+"pos"
-    dir_neg = BASE_DIR+"neg"
+    dir_pos = os.path.join(BASE_DIR, "pos")
+    dir_neg = os.path.join(BASE_DIR, "neg")
 
     nbc = nb.NaiveBayesClassifier(positive_corpus=dir_pos,
                                   negative_corpus=dir_neg)
@@ -36,8 +36,8 @@ def create_classifier():
 
 
 def test_classifier(nbc):
-    dir_pos_teste = BASE_DIR+"postest"
-    dir_neg_teste = BASE_DIR+"negtest"
+    dir_pos_teste = os.path.join(BASE_DIR, "postest")
+    dir_neg_teste = os.path.join(BASE_DIR, "negtest")
 
     tp, fp, tn, fn = 0, 0, 0, 0
 
