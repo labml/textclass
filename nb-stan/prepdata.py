@@ -66,6 +66,14 @@ class DataConverter(object):
             self.__write_R_vector(f, self.words)
             f.writelines(['doc <-\n'])
             self.__write_R_vector(f, self.docs)
+            # alpha hyperparam for 2 classes
+            f.writelines(['alpha <-\n', 'c(1, 1)\n'])
+            wclassprob = 1.0 / self.word_count
+            f.write('beta <-\n c(')
+            f.write(str(wclassprob))
+            for i in range(1, self.word_count):
+                f.write(', ' + str(wclassprob))
+            f.write(')\n')
 
     def convert(self):
         """ Convert data in corpus to dump data format for Stan/JAGS
