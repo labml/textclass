@@ -1,11 +1,17 @@
+var theta[K], alpha[K], phi[K, V], beta[V], label[M], w[N];
+
 model {
   theta ~ ddirch(alpha)
-  for (k in 1:K)
-    phi[k] ~ ddirch(beta)
 
-  for (m in 1:M)
+  for (k in 1:K) {
+    phi[k,] ~ ddirch(beta)
+  }
+
+  for (m in 1:M) {
     label[m] ~ dcat(theta)
+  }
 
-  for (n in 1:N)
-    w[n] ~ dcat(phi[label[doc[n]]])
+  for (n in 1:N) { 
+    w[n] ~ dcat(phi[label[doc[n]],])
+  }
 }
