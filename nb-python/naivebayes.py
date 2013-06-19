@@ -1,7 +1,8 @@
 '''
 Classificador Naive Bayes em python.
 - Cria um dicionario para a classificacao da frequencia das palavras
-- Cria um segundo Dicionario com as probabilidades baseado na frequencia das palavras
+- Cria um segundo Dicionario com as probabilidades baseado na frequencia das 
+  palavras
 - O corpus utilizado: classificador de reviews de filmes do NLTK
 
 Baseado no codigo disponivel em:
@@ -62,7 +63,8 @@ class NaiveBayesClassifier(object):
         pass
 
     """ Funcoes para treino
-        Basicamente, calculam a frequencia das palavras nos arquivos do corpus
+        Basicamente, calculam a frequencia das palavras nos arquivos do 
+        corpus
     """
     def train_positive(self):
         # freq de palavras nos textos positivos
@@ -76,7 +78,8 @@ class NaiveBayesClassifier(object):
         # atualiza no dicionario com a categoria
         self.update_counts(self.neg_freq, "neg")
 
-    """ Atualiza o dicionario definido em __init__ de acordo com a frequencia da palavra e sua categoria
+    """ Atualiza o dicionario definido em __init__ de acordo com a frequencia
+        da palavra e sua categoria
     """
     def update_counts(self, wordsfreq, cat):
         for word, freq in wordsfreq.iteritems():
@@ -97,7 +100,7 @@ class NaiveBayesClassifier(object):
                 words = tokenize(f.read())
                 freq.update(words)
 
-        print "Diretorio: ", dirc, " / Arquivos: ", len(os.listdir(dirc)), " / Palavras unicas: ", len(freq)
+        print "D:", dirc, "/A: ", len(os.listdir(dirc)), "/P: ", len(freq)
         return freq
 
     """ Operacoes com Naive Bayes
@@ -115,11 +118,12 @@ class NaiveBayesClassifier(object):
             e so' queremos achar a maior probabilidade, o denominador nao
             precisa ser calculado.
 
-            p(w | c=1) = (n. de w em itens positivos / n. de palavras nos itens positivos)
+            p(w | c=1) = (n. de w em itens positivos / 
+                         n. de palavras nos itens positivos)
 
             Laplace smoothing adiciona contagens ficticias no numerador e
-            denominador para suavizar as probabilidades de palavras nao vistas em
-            alguma classe
+            denominador para suavizar as probabilidades de palavras nao vistas
+            em alguma classe
         """
 
         # o numero total de palavras de cada categoria
@@ -158,12 +162,14 @@ class NaiveBayesClassifier(object):
     """ Operacoes de classificacao
     """
     def classifier(self, dir_positivo, dir_negativo):
-        # Para cada diretorio, percorrer os arquivos de texto e contar a frequencia geral das palavras
+        # Para cada diretorio, percorrer os arquivos de texto e contar a 
+        # frequencia geral das palavras
         freq_geral = self.getFrequency(dir_positivo)
         freq_geral.update(self.getFrequency(dir_negativo))
 
         prob_geral = {}
-        # Para cada palavra a ser classificada, procurar no dicionario de probabilidades treinado
+        # Para cada palavra a ser classificada, procurar no dicionario de 
+        # probabilidades treinado
         for word, prob in self.probs.iteritems():
             if word in freq_geral:
                 prob_geral.setdefault(word, prob)
@@ -183,7 +189,9 @@ class NaiveBayesClassifier(object):
         words = tokenize(item)
 
         # ignora palavras que nao estao no dicionario de treinamento (probs)
-        # TODO: se a palavra nao existe em probs, usar prob. de "palavra desconhecida"
+        # TODO: se a palavra nao existe em probs, usar prob. de "palavra
+        # desconhecida"
+        
         pos_probs = [self.__word_probability(w, 'pos') for w in words]
         neg_probs = [self.__word_probability(w, 'neg') for w in words]
         total_pos_logprob = sum([math.log(p) for p in pos_probs if p > 0.0])

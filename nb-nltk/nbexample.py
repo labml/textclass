@@ -1,7 +1,7 @@
 """
 Download do corpus:
 
-http://www.cs.cornell.edu/people/pabo/movie-review-data/review_polarity.tar.gz
+www.cs.cornell.edu/people/pabo/movie-review-data/review_polarity.tar.gz
 
 Arquivo com duas pastas com reviews positivos e negativos.
 Funciona com a mesma ideia de um classificador de spam.
@@ -10,7 +10,7 @@ Funciona com a mesma ideia de um classificador de spam.
 import os.path
 import NaiveBayes as nb
 
-BASE_DIR = "..."
+BASE_DIR = ""
 
 
 def read_test_item(item_file):
