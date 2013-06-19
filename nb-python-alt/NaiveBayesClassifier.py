@@ -1,4 +1,4 @@
-'''
+*'''
 Classificador Naive Bayes em python.
 - Cria um dicionario para a classificacao da frequencia das palavras
 - Cria um segundo Dicionario com as probabilidades baseado na frequencia das palavras
