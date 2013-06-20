@@ -12,14 +12,6 @@ import NaiveBayes as nb
 
 BASE_DIR = ""
 
-
-def read_test_item(item_file):
-    contents = ""
-    with open(item_file) as f:
-        contents = f.read()
-    return contents
-
-
 def create_classifier():
     dir_pos = os.path.join(BASE_DIR, "pos")
     dir_neg = os.path.join(BASE_DIR, "neg")
