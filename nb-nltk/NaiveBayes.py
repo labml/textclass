@@ -115,10 +115,8 @@ class NaiveBayesNltk(object):
     
         if cat == "pos":
             self.common_words_pos = self.common_words_pos + features 
-            print "train pos"
         else:
             self.common_words_neg = self.common_words_neg + features
-            print 'train neg'
 
         self.training_set = self.training_set + [(get_feature(word), 
             cat) for word in features]
