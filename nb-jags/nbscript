@@ -1,0 +1,10 @@
+model in "naivebayes.jags"
+data in "review-train.R"
+compile, nchains(2)
+initialize
+update 1000
+monitor theta
+monitor phi
+monitor label
+update 10000
+coda *
