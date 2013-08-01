@@ -9,6 +9,7 @@ Funciona com a mesma ideia de um classificador de spam.
 
 import os.path
 import NaiveBayes as nb
+import nltk
 
 BASE_DIR = ""
 
@@ -16,8 +17,8 @@ def create_classifier():
     dir_pos = os.path.join(BASE_DIR, "pos")
     dir_neg = os.path.join(BASE_DIR, "neg")
 
-    nbc = nb.NaiveBayes(positive_corpus=dir_pos,
-                        negative_corpus=dir_neg)
+    nbc = nb.NaiveBayesNltk(positive_corpus=dir_pos,
+                            negative_corpus=dir_neg)
 
     # treina as duas categorias
     nbc.train()
@@ -34,7 +35,9 @@ def test_classifier(nbc):
     print "Testando positivos..."
     for filename in os.listdir(dir_pos_teste):
         # envia o arquivo completo
-        item_class = nbc.classifier(os.path.join(dir_pos_teste, filename))
+        item_class = nbc.classifier(os.path.join(dir_pos_teste, filename), 
+                "pos")
+
         if item_class == 'pos':
             tp += 1
         else:
@@ -43,7 +46,8 @@ def test_classifier(nbc):
     print "Testando negativos..."
     for filename in os.listdir(dir_neg_teste):
         # envia o arquivo completo
-        item_class = nbc.classifier(os.path.join(dir_neg_teste, filename))
+        item_class = nbc.classifier(os.path.join(dir_neg_teste, filename),
+                "neg")
         if item_class == 'neg':
             tn += 1
         else:
@@ -57,6 +61,7 @@ def test_classifier(nbc):
     recall = float(tp) / float(tp + fn)
     print 'Recall: ', recall
     print 'F1 score: ', 2 * (precision * recall) / (precision + recall)
+
 
 if __name__ == '__main__':
     nbc = create_classifier()
